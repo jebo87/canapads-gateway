@@ -50,7 +50,7 @@ func main() {
 	}
 
 	go func() {
-		http.ListenAndServe("localhost:"+conf.Gateway.Port, app)
+		http.ListenAndServe("0.0.0.0:"+conf.Gateway.Port, app)
 
 	}()
 	log.Println("Server started. Press CTRL+C to exit application")
