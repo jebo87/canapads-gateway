@@ -50,10 +50,10 @@ func main() {
 	}
 
 	go func() {
-		http.ListenAndServe("0.0.0.0:"+conf.Gateway.Port, app)
+		http.ListenAndServe(conf.Gateway.URL+":"+conf.Gateway.Port, app)
 
 	}()
-	log.Println("Server started. Press CTRL+C to exit application")
+	log.Println("Server started in http://" + conf.Gateway.URL + ":" + conf.Gateway.Port + ". Press CTRL+C to exit application")
 	select {}
 
 }
@@ -122,6 +122,8 @@ func (h *AdsHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 		}
+		log.Println("printing ads in ServeHTTP for the Ads")
+		log.Println(string(ads))
 		res.Write(ads)
 
 	default:
