@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"time"
@@ -94,13 +93,14 @@ func main() {
 	router := mux.NewRouter()
 	methodsOk := handlers.AllowedMethods([]string{"GET", "OPTIONS"})
 	//allowedHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Bearer", "Bearer ", "content-type", "Origin", "Accept"})
-	originsOK := handlers.AllowedOrigins([]string{"http://localhost:5000"})
+	originsOK := handlers.AllowedOrigins([]string{"http://www.canapads.ca"})
 	optionsOk := handlers.IgnoreOptions()
 
 	log.Println("Launching makako-gateway...")
 	log.Println("Version 0.13")
 	log.Println("Developed by Makako Labs http://www.makakolabs.ca")
-	router.HandleFunc("/ads", validateMiddleware(testEndpoint)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/ads", validateMiddleware(adsHandler)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/ads/{key}", adHandler).Methods("GET")
 	//router.HandleFunc("/ads", (testEndpoint)).Methods("GET")
 	go func() {
 		// log.Fatal(http.ListenAndServe(":"+conf.Gateway.Port, handlers.CORS(methodsOk, originsOK)(router)))
@@ -154,11 +154,29 @@ func loadConfig() (conf Config) {
 
 }
 
-func testEndpoint(w http.ResponseWriter, req *http.Request) {
+func adHandler(res http.ResponseWriter, req *http.Request) {
+	requestedAd := req.URL.Path[5:]
 
-	//1. validate token with IS
+	ad, err := adDetail(context.Background(), client, requestedAd)
+	if err != nil {
+		http.Error(res, "{}", http.StatusNotFound)
+	} else {
+		res.Write(ad)
+	}
+}
 
-	//2. if token is valid, return the ads.
+func adsHandler(w http.ResponseWriter, req *http.Request) {
+	if req.Method == "OPTIONS" {
+		log.Println("Options request")
+
+		w.Header().Add("Access-Control-Allow-Methods", "GET")
+		w.Header().Add("Access-Control-Allow-Headers", "Authorization")
+		w.Header().Add("Access-Control-Allow-Origin", "http://www.canapads.ca")
+		w.WriteHeader(http.StatusOK)
+
+		return
+	}
+
 	fmt.Println("loading ads, request from " + req.RemoteAddr)
 
 	ads, err := list(context.Background(), client)
@@ -170,6 +188,8 @@ func testEndpoint(w http.ResponseWriter, req *http.Request) {
 	log.Println("printing ads in ServeHTTP for the Ads")
 	w.Write(ads)
 }
+
+//This is the middleware used to protect certain api calls
 func validateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -179,7 +199,7 @@ func validateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 			w.Header().Add("Access-Control-Allow-Methods", "GET")
 			w.Header().Add("Access-Control-Allow-Headers", "Authorization")
-			w.Header().Add("Access-Control-Allow-Origin", "http://localhost:5000")
+			w.Header().Add("Access-Control-Allow-Origin", "http://www.canapads.ca")
 			w.WriteHeader(http.StatusOK)
 
 			return
@@ -191,6 +211,7 @@ func validateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 				if bearerToken[0] == "Bearer" {
 					log.Println(bearerToken)
 					if validateToken(bearerToken[1]) {
+						//everything is ok, proceed with allow the exectution of the next function
 						next(w, req)
 					} else {
 						json.NewEncoder(w).Encode(Exception{Message: "Token invalid or expired"})
@@ -203,10 +224,6 @@ func validateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			json.NewEncoder(w).Encode(Exception{Message: "An authorization header is required"})
 		}
 	})
-}
-func basicAuth(username, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
 //ValidationResponse struct for the token validation
