@@ -93,14 +93,14 @@ func main() {
 	router := mux.NewRouter()
 	methodsOk := handlers.AllowedMethods([]string{"GET", "OPTIONS"})
 	//allowedHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Bearer", "Bearer ", "content-type", "Origin", "Accept"})
-	originsOK := handlers.AllowedOrigins([]string{"http://www.canapads.ca"})
+	originsOK := handlers.AllowedOrigins([]string{"https://www.canapads.ca"})
 	optionsOk := handlers.IgnoreOptions()
 
 	log.Println("Launching makako-gateway...")
 	log.Println("Version 0.13")
 	log.Println("Developed by Makako Labs http://www.makakolabs.ca")
 	router.HandleFunc("/ads", validateMiddleware(adsHandler)).Methods("GET", "OPTIONS")
-	router.HandleFunc("/ads/{key}", adHandler).Methods("GET")
+	router.HandleFunc("/ads/{key}", adHandler).Methods("GET", "OPTIONS")
 	//router.HandleFunc("/ads", (testEndpoint)).Methods("GET")
 	go func() {
 		// log.Fatal(http.ListenAndServe(":"+conf.Gateway.Port, handlers.CORS(methodsOk, originsOK)(router)))
@@ -155,9 +155,23 @@ func loadConfig() (conf Config) {
 }
 
 func adHandler(res http.ResponseWriter, req *http.Request) {
+	if req.Method == "OPTIONS" {
+		log.Println("Options request")
+
+		res.Header().Add("Access-Control-Allow-Methods", "GET")
+		res.Header().Add("Access-Control-Allow-Headers", "Authorization")
+		res.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
+		res.WriteHeader(http.StatusOK)
+
+		return
+	}
 	requestedAd := req.URL.Path[5:]
 
 	ad, err := adDetail(context.Background(), client, requestedAd)
+	//in case we need to see the ad returned, uncomment the three following lines
+	// var dat ads.Ad
+	// json.Unmarshal(ad, &dat)
+	// log.Println(dat)
 	if err != nil {
 		http.Error(res, "{}", http.StatusNotFound)
 	} else {
@@ -171,7 +185,7 @@ func adsHandler(w http.ResponseWriter, req *http.Request) {
 
 		w.Header().Add("Access-Control-Allow-Methods", "GET")
 		w.Header().Add("Access-Control-Allow-Headers", "Authorization")
-		w.Header().Add("Access-Control-Allow-Origin", "http://www.canapads.ca")
+		w.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
 		w.WriteHeader(http.StatusOK)
 
 		return
@@ -199,7 +213,7 @@ func validateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 			w.Header().Add("Access-Control-Allow-Methods", "GET")
 			w.Header().Add("Access-Control-Allow-Headers", "Authorization")
-			w.Header().Add("Access-Control-Allow-Origin", "http://www.canapads.ca")
+			w.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
 			w.WriteHeader(http.StatusOK)
 
 			return
