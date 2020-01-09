@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"time"
-
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,8 +11,10 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"bitbucket.org/jebo87/makako-grpc/ads"
 	"google.golang.org/grpc"
@@ -53,8 +53,8 @@ type Config struct {
 	} `yaml:gateway`
 	API struct {
 		ProdAddress string `yaml:"prod-address"`
-		DevAddress  string `yaml:dev-address`
-		Port        string `yaml:port`
+		DevAddress  string `yaml:"dev-address"`
+		Port        string `yaml:"port"`
 	} `yaml:api`
 }
 
@@ -66,6 +66,7 @@ var deployedFlag *bool
 var conf Config
 var conn *grpc.ClientConn
 var client ads.AdsClient
+var itemsPerPage = 20
 
 //ContextKey used in context
 type ContextKey string
@@ -99,12 +100,23 @@ func main() {
 	log.Println("Launching makako-gateway...")
 	log.Println("Version 0.13")
 	log.Println("Developed by Makako Labs http://www.makakolabs.ca")
-	router.HandleFunc("/ads", validateMiddleware(adsHandler)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/ads", (adsHandler)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/ads/{key}", adHandler).Methods("GET", "OPTIONS")
 	//router.HandleFunc("/ads", (testEndpoint)).Methods("GET")
+
 	go func() {
 		// log.Fatal(http.ListenAndServe(":"+conf.Gateway.Port, handlers.CORS(methodsOk, originsOK)(router)))
-		log.Fatal(http.ListenAndServe(":"+conf.Gateway.Port, handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
+
+		if *deployedFlag {
+			log.Println("Starting server in production mode...")
+			log.Println("Server started in http://0.0.0.0" + ":" + conf.Gateway.Port + ". Press CTRL+C to exit application")
+			log.Fatal(http.ListenAndServe(":"+conf.Gateway.Port, handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
+
+		} else {
+			log.Println("Starting server in develpment mode")
+			log.Println("Server started in http://localhost" + ":" + conf.Gateway.Port + ". Press CTRL+C to exit application")
+			log.Fatal(http.ListenAndServe("localhost:"+conf.Gateway.Port, handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
+		}
 
 	}()
 
@@ -113,11 +125,13 @@ func main() {
 	var err error
 	if *deployedFlag {
 		conn, err = grpc.Dial(conf.API.ProdAddress+":"+conf.API.Port, grpc.WithInsecure())
-		log.Println("connecting to " + conf.API.ProdAddress)
+		log.Println("connecting to GRPC server " + conf.API.ProdAddress)
+
 	} else {
 		conn, err = grpc.Dial(conf.API.DevAddress+":"+conf.API.Port, grpc.WithInsecure())
 
-		log.Println("connecting to " + conf.API.DevAddress)
+		log.Println("connecting to GRPC server " + conf.API.DevAddress)
+
 	}
 	defer conn.Close()
 	client = ads.NewAdsClient(conn)
@@ -127,7 +141,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Println("Server started in http://0.0.0.0" + ":" + conf.Gateway.Port + ". Press CTRL+C to exit application")
 	<-c
 
 }
@@ -159,7 +172,7 @@ func adHandler(res http.ResponseWriter, req *http.Request) {
 		log.Println("Options request")
 
 		res.Header().Add("Access-Control-Allow-Methods", "GET")
-		res.Header().Add("Access-Control-Allow-Headers", "Authorization")
+		//res.Header().Add("Access-Control-Allow-Headers", "Authorization")
 		res.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
 		res.WriteHeader(http.StatusOK)
 
@@ -184,7 +197,6 @@ func adsHandler(w http.ResponseWriter, req *http.Request) {
 		log.Println("Options request")
 
 		w.Header().Add("Access-Control-Allow-Methods", "GET")
-		w.Header().Add("Access-Control-Allow-Headers", "Authorization")
 		w.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
 		w.WriteHeader(http.StatusOK)
 
@@ -192,8 +204,37 @@ func adsHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Println("loading ads, request from " + req.RemoteAddr)
+	var pageCount, from, size int
+	var errStr error
 
-	ads, err := list(context.Background(), client)
+	//check if the user is asking to show more listings per page, 100 maximum.
+	if len(req.URL.Query()["qty"]) > 0 {
+		size, errStr = strconv.Atoi(req.URL.Query()["qty"][0])
+		//if the user is requesting unexpected listing quantities, set size to default
+		if size > 100 || size < itemsPerPage {
+			size = itemsPerPage
+		}
+		if errStr != nil {
+			log.Println("Error trying to parse page number")
+		} else {
+			itemsPerPage = size
+		}
+
+	}
+	if len(req.URL.Query()["page"]) > 0 {
+		pageCount, errStr = strconv.Atoi(req.URL.Query()["page"][0])
+		from = pageCount*itemsPerPage - itemsPerPage
+		if errStr != nil {
+			from = 0
+		}
+	} else {
+		from = 0
+	}
+
+	filter := ads.Filter{
+		From: int32(from),
+		Size: int32(itemsPerPage)}
+	ads, err := list(context.Background(), client, filter)
 	if err != nil {
 		json.NewEncoder(w).Encode(Exception{Message: err.Error()})
 		return
@@ -289,13 +330,16 @@ func validateToken(token string) bool {
 
 }
 
-func list(ctx context.Context, client ads.AdsClient) ([]byte, error) {
-	ads, err := client.List(ctx, &ads.Void{})
+func list(ctx context.Context, client ads.AdsClient, filter ads.Filter) ([]byte, error) {
+	// ads, err := client.List(ctx, &ads.Void{})
+	ads, err := client.List(ctx, &filter)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch ads: %v", err)
 	}
 	log.Println("returning ad list")
-	return json.Marshal(ads)
+	marshalled, err := json.Marshal(ads)
+	log.Println(ads)
+	return marshalled, err
 
 }
 
