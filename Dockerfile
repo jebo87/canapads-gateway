@@ -14,7 +14,7 @@ ARG DOCKER_GIT_CREDENTIALS
 RUN apk update && apk add --no-cache git
 
 RUN git config --global credential.helper store && echo "${DOCKER_GIT_CREDENTIALS}" > ~/.git-credentials
-RUN git config --global url."https://jebo87:REPB8bsG7TWPuBHzyS9n@bitbucket.org/".insteadOf "https://bitbucket.org/"
+RUN git config --global url."https://jebo87:DJxgGGJxoE94ZWqYDL4w@gitlab.com/".insteadOf "https://gitlab.com/"
 WORKDIR $GOPATH/src/gitlab.com/jebo87/makako-gateway/
 COPY . .
 
