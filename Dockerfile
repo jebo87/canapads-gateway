@@ -7,14 +7,14 @@ FROM golang:alpine AS builder
 
 #http://smartystreets.com/blog/2018/09/private-dependencies-in-docker-and-go
 #then docker build --build-arg DOCKER_GIT_CREDENTIALS -t makako-gateway .
-ARG DOCKER_GIT_CREDENTIALS
+#ARG DOCKER_GIT_CREDENTIALS
 
 # Install git.
 # Git is required for fetching the dependencies.
 RUN apk update && apk add --no-cache git
 
-RUN git config --global credential.helper store && echo "${DOCKER_GIT_CREDENTIALS}" > ~/.git-credentials
-RUN git config --global url."https://jebo87:REPB8bsG7TWPuBHzyS9n@bitbucket.org/".insteadOf "https://bitbucket.org/"
+#RUN git config --global credential.helper store && echo "${DOCKER_GIT_CREDENTIALS}" > ~/.git-credentials
+#RUN git config --global url."https://jebo87:REPB8bsG7TWPuBHzyS9n@bitbucket.org/".insteadOf "https://bitbucket.org/"
 WORKDIR $GOPATH/src/bitbucket.org/jebo87/makako-gateway/
 COPY . .
 
