@@ -16,7 +16,7 @@ import (
 	"syscall"
 	"time"
 
-	"bitbucket.org/jebo87/makako-grpc/ads"
+	"gitlab.com/jebo87/makako-grpc/ads"
 	"google.golang.org/grpc"
 
 	"github.com/gorilla/handlers"
