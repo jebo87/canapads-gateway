@@ -35,6 +35,6 @@ COPY --from=builder /makako-gateway/bin/makako-gateway /makako-gateway/bin/makak
 ENTRYPOINT ["/makako-gateway/bin/makako-gateway", "-deployed=true"]
 EXPOSE 8087
 #export DOCKER_GIT_CREDENTIALS="$(cat ~/.git-credentials)"
-#docker build --build-arg DOCKER_GIT_CREDENTIALS -t makako-gateway:0.1 .
+#docker build --build-arg DOCKER_GIT_CREDENTIALS -t registry.gitlab.com/jebo87/makako-gateway:0.1 .
 #docker run --rm --name makako-gateway --network makako-network -v $(pwd)/config:/makako-gateway/bin/config -p 8087:8087 makako-gateway:0.1
 #docker run -d --name makako-gateway --network makako-network -v $(pwd)/config:/makako-gateway/bin/config -p 8087:8087 makako-gateway:0.1

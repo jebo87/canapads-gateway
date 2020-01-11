@@ -4,5 +4,5 @@ before_script:
 build_image:
   script:
     - export DOCKER_GIT_CREDENTIALS="$(cat ~/.git-credentials)"
-    - docker build --build-arg DOCKER_GIT_CREDENTIALS -t makako-gateway:0.1 .
+    - docker build --build-arg DOCKER_GIT_CREDENTIALS -t registry.gitlab.com/jebo87/makako-gateway:0.1 .
     - docker push registry.gitlab.com/jebo87/makako-gateway:0.1
