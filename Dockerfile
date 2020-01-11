@@ -15,7 +15,7 @@ RUN apk update && apk add --no-cache git
 
 #RUN git config --global credential.helper store && echo "${DOCKER_GIT_CREDENTIALS}" > ~/.git-credentials
 #RUN git config --global url."https://jebo87:REPB8bsG7TWPuBHzyS9n@bitbucket.org/".insteadOf "https://bitbucket.org/"
-WORKDIR $GOPATH/src/bitbucket.org/jebo87/makako-gateway/
+WORKDIR $GOPATH/src/gitlab.com/jebo87/makako-gateway/
 COPY . .
 
 # Fetch dependencies.
