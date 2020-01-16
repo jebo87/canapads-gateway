@@ -25,27 +25,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// headersOk := handlers.AllowedHeaders([]string{"Authorization"})
-//     originsOk := handlers.AllowedOrigins([]string{"*"})
-//     methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
-
-//     fmt.Printf("Server is running at http://localhost%s\n", port)
-//     log.Fatal(http.ListenAndServe(port, handlers.CORS(originsOk, headersOk, methodsOk)(router)))
-
-//App struct
-type App struct {
-	AdsHandler *AdsHandler
-}
-
-//AdsHandler is the handler for all ads requests
-type AdsHandler struct {
-	AdHandler *AdHandler
-}
-
-//AdHandler is the handler for all ads requests
-type AdHandler struct {
-}
-
 //Config struct
 type Config struct {
 	Gateway struct {
@@ -60,6 +39,9 @@ type Config struct {
 
 type Exception struct {
 	Message string `json:"message"`
+}
+type AdJson struct {
+	Count int `json:"count"`
 }
 
 var deployedFlag *bool
@@ -102,6 +84,7 @@ func main() {
 	log.Println("Developed by Makako Labs http://www.makakolabs.ca")
 	router.HandleFunc("/ads", (adsHandler)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/ads/{key}", adHandler).Methods("GET", "OPTIONS")
+	router.HandleFunc("/ad_count", adsCountHandler).Methods("GET", "OPTIONS")
 	//router.HandleFunc("/ads", (testEndpoint)).Methods("GET")
 
 	go func() {
@@ -186,10 +169,35 @@ func adHandler(res http.ResponseWriter, req *http.Request) {
 	// json.Unmarshal(ad, &dat)
 	// log.Println(dat)
 	if err != nil {
+		log.Println(err)
+
 		http.Error(res, "{}", http.StatusNotFound)
 	} else {
 		res.Write(ad)
 	}
+}
+
+func adsCountHandler(w http.ResponseWriter, req *http.Request) {
+	if req.Method == "OPTIONS" {
+		log.Println("Options request")
+
+		w.Header().Add("Access-Control-Allow-Methods", "GET")
+		w.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
+		w.WriteHeader(http.StatusOK)
+
+		return
+	}
+	log.Println("getting ad count from server")
+	adCount, err := count(context.Background(), client)
+
+	if err != nil {
+		log.Println(err)
+		//json.NewEncoder(w).Encode(Exception{Message: err.Error()})
+		http.Error(w, "{}", http.StatusNotAcceptable)
+		return
+	}
+
+	json.NewEncoder(w).Encode(AdJson{Count: adCount})
 }
 
 func adsHandler(w http.ResponseWriter, req *http.Request) {
@@ -203,7 +211,7 @@ func adsHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Println("loading ads, request from " + req.RemoteAddr)
+	log.Println("loading ads, request from " + req.RemoteAddr)
 	var pageCount, from, size int
 	var errStr error
 
@@ -236,12 +244,14 @@ func adsHandler(w http.ResponseWriter, req *http.Request) {
 		Size: int32(itemsPerPage)}
 	ads, err := list(context.Background(), client, filter)
 	if err != nil {
-		json.NewEncoder(w).Encode(Exception{Message: err.Error()})
-		return
-	}
+		log.Println(err)
+		http.Error(w, "{}", http.StatusNotFound)
 
-	log.Println("printing ads in ServeHTTP for the Ads")
-	w.Write(ads)
+	} else {
+
+		log.Println("printing ads in ServeHTTP for the Ads")
+		w.Write(ads)
+	}
 }
 
 //This is the middleware used to protect certain api calls
@@ -336,7 +346,6 @@ func list(ctx context.Context, client ads.AdsClient, filter ads.Filter) ([]byte,
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch ads: %v", err)
 	}
-	log.Println("returning ad list")
 	marshalled, err := json.Marshal(ads)
 	log.Println(ads)
 	return marshalled, err
@@ -353,6 +362,8 @@ func adDetail(ctx context.Context, client ads.AdsClient, adID string) ([]byte, e
 
 }
 
-// func enableCors(w *http.ResponseWriter) {
-// 	(*w).Header().Set("Access-Control-Allow-Origin", "http://192.168.2.23:5000")
-// }
+func count(ctx context.Context, client ads.AdsClient) (int, error) {
+	adCount, err := client.Count(ctx, &ads.Void{})
+	log.Println("Ad Count", adCount)
+	return int(adCount.GetCount()), err
+}
