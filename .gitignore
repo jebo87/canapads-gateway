@@ -51,3 +51,5 @@ builds/**/images/*
 *.xxjson
 
 bin/
+
+makako-gateway

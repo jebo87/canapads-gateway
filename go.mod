@@ -3,6 +3,7 @@ module gitlab.com/jebo87/makako-gateway
 go 1.13
 
 require (
+	github.com/elastic/go-elasticsearch/v7 v7.5.0
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	gitlab.com/jebo87/makako-grpc v0.2.1
