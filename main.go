@@ -29,17 +29,20 @@ import (
 type Config struct {
 	Gateway struct {
 		Port string `yaml:"port"`
-	} `yaml:gateway`
+	} `yaml:"gateway"`
 	API struct {
 		ProdAddress string `yaml:"prod-address"`
 		DevAddress  string `yaml:"dev-address"`
 		Port        string `yaml:"port"`
-	} `yaml:api`
+	} `yaml:"api"`
 }
 
+//Exception struct
 type Exception struct {
 	Message string `json:"message"`
 }
+
+//AdJson struct
 type AdJson struct {
 	Count int `json:"count"`
 }
@@ -200,6 +203,7 @@ func adsCountHandler(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(AdJson{Count: adCount})
 }
 
+// ads?page=1&size=100
 func adsHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "OPTIONS" {
 		log.Println("Options request")
@@ -210,6 +214,8 @@ func adsHandler(w http.ResponseWriter, req *http.Request) {
 
 		return
 	}
+
+	log.Println(req)
 
 	log.Println("loading ads, request from " + req.RemoteAddr)
 	var pageCount, from, size int
@@ -347,7 +353,7 @@ func list(ctx context.Context, client ads.AdsClient, filter ads.Filter) ([]byte,
 		return nil, fmt.Errorf("could not fetch ads: %v", err)
 	}
 	marshalled, err := json.Marshal(ads)
-	log.Println(ads)
+	//log.Println(ads)
 	return marshalled, err
 
 }
