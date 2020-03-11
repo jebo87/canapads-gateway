@@ -41,3 +41,14 @@ type ValidationResponse struct {
 
 //ClientGRPC reusable client for GRPC connections
 var ClientGRPC ads.AdsClient
+
+//ElasticFilter filter for elastic search queries
+type ElasticFilter struct {
+	Query string
+	Size  int
+	From  int
+	Gym   bool
+	Pets  int
+	City  string
+	Rooms int
+}

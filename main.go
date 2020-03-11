@@ -30,6 +30,7 @@ var netClient = &http.Client{
 	Timeout: time.Second * 10,
 }
 var router *mux.Router
+var es elasticsearch.Client
 
 func main() {
 	log.Println("Launching makako-gateway...")
