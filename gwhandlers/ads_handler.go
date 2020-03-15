@@ -15,7 +15,9 @@ import (
 
 var itemsPerPage = 20
 
+//example calls
 // ads?page=1&qty=100
+// ads?page=1&qty=5&gym=true&furnished=true&pool=true&city=sutamarcha&gym=false&rent_by_owner=true&country=CAMBODIA&property_type=apartment&province=qc&neighborhood=la%20salle
 
 // AdsHandler handler for searches
 func AdsHandler(w http.ResponseWriter, req *http.Request) {
@@ -34,20 +36,18 @@ func AdsHandler(w http.ResponseWriter, req *http.Request) {
 	var errStr error
 	filter := ads.Filter{}
 
-	//https://gw.canapads.ca/ads?from=6&size=2&gym=true&furnished=true&pool=true&city=sutamarcha&gym=false&rent_by_owner=true&country=CAMBODIA&property_type=apartment&province=qc&neighborhood=la%20salle
-
 	//check if the user is asking to show more listings per page, 100 maximum.
 	if len(req.URL.Query()["qty"]) > 0 {
 		size, errStr = strconv.Atoi(req.URL.Query()["qty"][0])
 		//if the user is requesting unexpected listing quantities, set size to default
-		if size > 100 || size < itemsPerPage {
+		if size > 100 {
 			size = itemsPerPage
 		}
 		if errStr != nil {
 
 			log.Println("Error trying to parse quantity of listings to show per page: ", errStr)
 		} else {
-			log.Println("Going back to default size")
+			log.Printf("setting size to %v", size)
 			itemsPerPage = size
 		}
 	}
@@ -77,7 +77,7 @@ func AdsHandler(w http.ResponseWriter, req *http.Request) {
 		pets, errStr := strconv.Atoi(req.URL.Query()["pets"][0])
 		if errStr != nil || pets > 4 || pets < 0 {
 			filter.Pets = nil
-			log.Println("Error trying to parse gym: ", errStr)
+			log.Println("Error trying to parse pets: ", errStr)
 		} else {
 			filter.Pets = &wrappers.Int32Value{Value: int32(pets)}
 		}
@@ -129,6 +129,25 @@ func AdsHandler(w http.ResponseWriter, req *http.Request) {
 	log.Println(req.URL.Query())
 	if len(req.URL.Query()["search_param"]) > 0 {
 		filter.SearchParam = &wrappers.StringValue{Value: req.URL.Query()["search_param"][0]}
+	}
+
+	if len(req.URL.Query()["price_low"]) > 0 {
+		priceLow, errStr := strconv.Atoi(req.URL.Query()["price_low"][0])
+		if errStr != nil || priceLow < 0 {
+			filter.PriceLow = nil
+			log.Println("Error trying to parse priceLow: ", errStr)
+		} else {
+			filter.PriceLow = &wrappers.Int32Value{Value: int32(priceLow)}
+		}
+	}
+	if len(req.URL.Query()["price_high"]) > 0 {
+		priceHigh, errStr := strconv.Atoi(req.URL.Query()["price_high"][0])
+		if errStr != nil || priceHigh < 1 {
+			filter.PriceHigh = nil
+			log.Println("Error trying to parse priceHigh: ", errStr)
+		} else {
+			filter.PriceHigh = &wrappers.Int32Value{Value: int32(priceHigh)}
+		}
 	}
 
 	//if k := keys[]
