@@ -42,14 +42,17 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 						//everything is ok, proceed with allow the exectution of the next function
 						next(w, req)
 					} else {
-						json.NewEncoder(w).Encode(structs.Exception{Message: "Token invalid or expired"})
+						// json.NewEncoder(w).Encode(structs.Exception{Message: "Token invalid or expired"})
+						http.Error(w, `{Message: "Token invalid or expired"}`, http.StatusUnauthorized)
+
 					}
 				} else {
-					json.NewEncoder(w).Encode(structs.Exception{Message: "Invalid authorization token"})
+					http.Error(w, `{Message: "Invalid authorization token"}`, http.StatusUnauthorized)
+
 				}
 			}
 		} else {
-			json.NewEncoder(w).Encode(structs.Exception{Message: "An authorization header is required"})
+			http.Error(w, `{Message: "Authorization required"}`, http.StatusUnauthorized)
 		}
 	})
 }

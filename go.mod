@@ -7,7 +7,7 @@ require (
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
-	gitlab.com/jebo87/makako-grpc v0.2.4
+	gitlab.com/jebo87/makako-grpc v0.2.6
 	google.golang.org/grpc v1.27.1
 	gopkg.in/yaml.v2 v2.2.8
 )

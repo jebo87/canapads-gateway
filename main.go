@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"gitlab.com/jebo87/makako-gateway/gwhandlers"
+	"gitlab.com/jebo87/makako-gateway/httputils"
 	"gitlab.com/jebo87/makako-gateway/structs"
 	"gitlab.com/jebo87/makako-grpc/ads"
 	"google.golang.org/grpc"
@@ -95,9 +96,10 @@ func loadHandlers() {
 	router = mux.NewRouter()
 
 	// router.HandleFunc("/ads", httputils.ValidateMiddleware(adsHandler)).Methods("GET", "OPTIONS")
-	router.HandleFunc("/ads", (gwhandlers.AdsHandler)).Methods("GET", "OPTIONS")
+	// router.HandleFunc("/ads", (gwhandlers.AdsHandler)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/ads", (gwhandlers.ListingHandler)).Methods("GET", "POST", "OPTIONS")
 	router.HandleFunc("/ads/{key}", gwhandlers.AdHandler).Methods("GET", "OPTIONS")
-	router.HandleFunc("/ad_count", gwhandlers.AdsCountHandler).Methods("GET", "OPTIONS")
+	router.HandleFunc("/ad_count", httputils.ValidateMiddleware(gwhandlers.AdsCountHandler)).Methods("GET", "OPTIONS")
 }
 
 func startServer(router *mux.Router) {
