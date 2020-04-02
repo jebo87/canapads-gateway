@@ -16,7 +16,8 @@ step-develop:
 step-deploy-production:
   stage: test
   before_script:
-    - echo here we should have the before script for deployment
+    - export ELASTIC_ADDRESS=$ELASTIC_ADDRESS_KEY
+    - echo $ELASTIC_ADDRESS
   only:
     - master
   tags:
