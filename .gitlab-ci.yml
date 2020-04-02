@@ -17,7 +17,11 @@ step-deploy-production:
   stage: test
   before_script:
     - export ELASTIC_ADDRESS=$ELASTIC_ADDRESS_KEY
-    - echo $ELASTIC_ADDRESS
+    - export ELASTIC_PORT=$ELASTIC_PORT_KEY
+    - export PORT=$PORT_KEY
+    - export API_ADDRESS_PROD=$API_ADDRESS_PROD_KEY
+    - export API_PORT_PROD=$API_PORT_PROD_KEY
+
   only:
     - master
   tags:
