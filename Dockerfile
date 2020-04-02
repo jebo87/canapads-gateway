@@ -30,7 +30,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /makako-g
 FROM scratch
 # Copy our static executable.
 COPY --from=builder /makako-gateway/bin/makako-gateway /makako-gateway/bin/makako-gateway
-
+RUN echo "ELASTIC URL $ELASTIC_ADDRESS"
 # Run the hello binary.
 ENTRYPOINT ["/makako-gateway/bin/makako-gateway", "-deployed=true"]
 EXPOSE 8087
