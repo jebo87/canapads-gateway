@@ -8,6 +8,7 @@ FROM golang:alpine AS builder
 #http://smartystreets.com/blog/2018/09/private-dependencies-in-docker-and-go
 #then docker build --build-arg DOCKER_GIT_CREDENTIALS -t makako-gateway .
 ARG DOCKER_GIT_CREDENTIALS
+ARG ELASTIC_ADDRESS_ENV
 
 # Install git.
 # Git is required for fetching the dependencies.
@@ -30,7 +31,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /makako-g
 FROM scratch
 # Copy our static executable.
 COPY --from=builder /makako-gateway/bin/makako-gateway /makako-gateway/bin/makako-gateway
-RUN echo "ELASTIC URL $ELASTIC_ADDRESS"
+
+ENV ELASTIC_ADDRESS = $ELASTIC_ADDRESS_ENV
 # Run the hello binary.
 ENTRYPOINT ["/makako-gateway/bin/makako-gateway", "-deployed=true"]
 EXPOSE 8087
