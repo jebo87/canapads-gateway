@@ -28,6 +28,7 @@ step-deploy-production:
     - export DOCKER_GIT_CREDENTIALS="$(cat ~/.git-credentials)"
     - docker build --build-arg DOCKER_GIT_CREDENTIALS -t registry.gitlab.com/jebo87/makako-gateway:$VERSION  .
     - docker push registry.gitlab.com/jebo87/makako-gateway:$VERSION
+    - docker tag registry.gitlab.com/jebo87/makako-gateway:$VERSION registry.gitlab.com/jebo87/makako-gateway:latest
     - docker push registry.gitlab.com/jebo87/makako-gateway:latest
     - docker image prune -f
     - kubectl apply -f /mnt/linux/k8s/MakakoLabs/makako-gateway.yaml
