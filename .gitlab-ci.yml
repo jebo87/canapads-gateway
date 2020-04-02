@@ -30,4 +30,4 @@ step-deploy-production:
     - docker push registry.gitlab.com/jebo87/makako-gateway:$VERSION
     - docker push registry.gitlab.com/jebo87/makako-gateway:latest
     - docker image prune -f
-    - docker rm makako-gateway -f
+    - kubectl apply -f /mnt/linux/k8s/MakakoLabs/makako-gateway.yaml

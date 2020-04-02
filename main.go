@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -19,8 +18,6 @@ import (
 	"gitlab.com/jebo87/makako-gateway/structs"
 	"gitlab.com/jebo87/makako-grpc/ads"
 	"google.golang.org/grpc"
-
-	yaml "gopkg.in/yaml.v2"
 )
 
 var deployedFlag *bool
@@ -33,6 +30,11 @@ var netClient = &http.Client{
 var router *mux.Router
 var es elasticsearch.Client
 
+//Environment variables to set:
+// os.Getenv("API_ADDRESS_PROD"), os.Getenv("API_PORT_PROD")
+// os.Getenv("API_ADDRESS_DEV"), os.Getenv("API_PORT_DEV")
+// os.Getenv("PORT")
+// os.Getenv("ELASTIC_ADDRESS"), os.Getenv("ELASTIC_PORT"))
 func main() {
 	log.Println("Launching makako-gateway...")
 	log.Println("Developed by Makako Labs http://www.makakolabs.ca")
@@ -47,15 +49,16 @@ func main() {
 	//call gRPC server
 	var err error
 	if *deployedFlag {
-		conn, err = grpc.Dial(conf.API.ProdAddress+":"+conf.API.Port, grpc.WithInsecure())
-		log.Println("connecting to GRPC server " + conf.API.ProdAddress)
+		conn, err = grpc.Dial(os.Getenv("API_ADDRESS_PROD")+":"+os.Getenv("API_PORT_PROD"), grpc.WithInsecure())
+		log.Println("connecting to GRPC server " + os.Getenv("API_ADDRESS_PROD"))
 
 	} else {
-		conn, err = grpc.Dial(conf.API.DevAddress+":"+conf.API.Port, grpc.WithInsecure())
+		conn, err = grpc.Dial(os.Getenv("API_ADDRESS_DEV")+":"+os.Getenv("API_PORT_DEV"), grpc.WithInsecure())
 
-		log.Println("connecting to GRPC server " + conf.API.DevAddress)
+		log.Println("connecting to GRPC server " + os.Getenv("API_ADDRESS_DEV"))
 
 	}
+
 	defer conn.Close()
 	clientGRPC = ads.NewAdsClient(conn)
 	structs.ClientGRPC = clientGRPC
@@ -72,24 +75,7 @@ func main() {
 
 func loadConfig() {
 	deployedFlag = flag.Bool("deployed", false, "Defines if absolute paths need to be used for the config files")
-	var configFile []byte
-	var err error
 	flag.Parse()
-
-	if *deployedFlag {
-		configFile, err = ioutil.ReadFile("/makako-gateway/bin/config/conf.yaml")
-	} else {
-		configFile, err = ioutil.ReadFile("config/conf.yaml")
-	}
-	if err != nil {
-		panic(err)
-	}
-	err = yaml.Unmarshal(configFile, &conf)
-	if err != nil {
-		panic(err)
-	}
-	return
-
 }
 
 func loadHandlers() {
@@ -110,11 +96,11 @@ func startServer(router *mux.Router) {
 	// log.Fatal(http.ListenAndServe(":"+conf.Gateway.Port, handlers.CORS(methodsOk, originsOK)(router)))
 
 	if *deployedFlag {
-		log.Println("Server started in prod mode @ http://0.0.0.0" + ":" + conf.Gateway.Port + ". Press CTRL+C to exit application")
-		log.Fatal(http.ListenAndServe(":"+conf.Gateway.Port, handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
+		log.Println("Server started in prod mode @ http://0.0.0.0" + ":" + os.Getenv("PORT") + ". Press CTRL+C to exit application")
+		log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
 	} else {
-		log.Println("Server started in dev mode @ http://localhost" + ":" + conf.Gateway.Port + ". Press CTRL+C to exit application")
-		log.Fatal(http.ListenAndServe("localhost:"+conf.Gateway.Port, handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
+		log.Println("Server started in dev mode @ http://localhost" + ":" + os.Getenv("PORT") + ". Press CTRL+C to exit application")
+		log.Fatal(http.ListenAndServe("localhost:"+os.Getenv("PORT"), handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
 	}
 }
 
@@ -122,7 +108,7 @@ func loadElastic() {
 	log.Println("connecting to ElasticSearch...")
 	cfg := elasticsearch.Config{
 		Addresses: []string{
-			"http://192.168.2.200:9200",
+			fmt.Sprintf("http://%v:%v", os.Getenv("ELASTIC_ADDRESS"), os.Getenv("ELASTIC_PORT")),
 		},
 	}
 	es, err := elasticsearch.NewClient(cfg)
