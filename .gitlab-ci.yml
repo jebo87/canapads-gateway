@@ -24,6 +24,7 @@ step-deploy-production:
   script:
     - 'VERSION=$(curl -Ss --request GET --header "PRIVATE-TOKEN: DJxgGGJxoE94ZWqYDL4w" "https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/repository/tags" | jq -r ".[0] | .name")'
     - test -z "$VERSION" && echo "no version tag found" && exit 1
+    - echo 'Version '$VERSION ' was found'
     - export DOCKER_GIT_CREDENTIALS="$(cat ~/.git-credentials)"
-    - docker build --build-arg DOCKER_GIT_CREDENTIALS -t registry.gitlab.com/jebo87/makako-gateway .
-    - docker push registry.gitlab.com/jebo87/makako-gateway:0.1
+    - docker build --build-arg DOCKER_GIT_CREDENTIALS -t registry.gitlab.com/jebo87/makako-gateway:$VERSION  .
+    - docker push registry.gitlab.com/jebo87/makako-gateway:$VERSION
