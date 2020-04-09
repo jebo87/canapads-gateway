@@ -50,7 +50,7 @@ func main() {
 	var err error
 	if *deployedFlag {
 		conn, err = grpc.Dial(os.Getenv("API_ADDRESS_PROD")+":"+os.Getenv("API_PORT_PROD"), grpc.WithInsecure())
-		log.Println("connecting to GRPC server " + os.Getenv("API_ADDRESS_PROD"))
+		log.Printf("connecting to GRPC server in %v:%v ", os.Getenv("API_ADDRESS_PROD"), os.Getenv("API_PORT_PROD"))
 
 	} else {
 		conn, err = grpc.Dial(os.Getenv("API_ADDRESS_DEV")+":"+os.Getenv("API_PORT_DEV"), grpc.WithInsecure())
