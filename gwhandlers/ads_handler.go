@@ -25,6 +25,7 @@ func ListingHandler(w http.ResponseWriter, req *http.Request) {
 		w.Header().Add("Access-Control-Allow-Methods", "GET,POST")
 		w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 		w.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
+		w.Header().Add("Access-Control-Allow-Origin", "http://192.168.2.201:30030")
 		w.WriteHeader(http.StatusOK)
 
 		return

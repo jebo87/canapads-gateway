@@ -92,7 +92,7 @@ func loadHandlers() {
 func startServer(router *mux.Router) {
 	methodsOk := handlers.AllowedMethods([]string{"GET", "OPTIONS"})
 	//allowedHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Bearer", "Bearer ", "content-type", "Origin", "Accept"})
-	originsOK := handlers.AllowedOrigins([]string{"https://www.canapads.ca"})
+	originsOK := handlers.AllowedOrigins([]string{"https://www.canapads.ca", "http://192.168.2.201:30030"})
 	optionsOk := handlers.IgnoreOptions()
 	// log.Fatal(http.ListenAndServe(":"+conf.Gateway.Port, handlers.CORS(methodsOk, originsOK)(router)))
 
