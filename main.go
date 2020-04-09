@@ -74,6 +74,7 @@ func main() {
 }
 
 func loadConfig() {
+	//TODO: check if we really need to do this
 	deployedFlag = flag.Bool("deployed", false, "Defines if absolute paths need to be used for the config files")
 	flag.Parse()
 }
