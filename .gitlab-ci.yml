@@ -16,11 +16,7 @@ step-develop:
 step-deploy-production:
   stage: test
   before_script:
-    - export ELASTIC_ADDRESS=$ELASTIC_ADDRESS_KEY
-    - export ELASTIC_PORT=$ELASTIC_PORT_KEY
-    - export PORT=$PORT_KEY
-    - export API_ADDRESS_PROD=$API_ADDRESS_PROD_KEY
-    - export API_PORT_PROD=$API_PORT_PROD_KEY
+    - echo "executing before script"
 
   only:
     - master
@@ -31,7 +27,7 @@ step-deploy-production:
     - test -z "$VERSION" && echo "no version tag found" && exit 1
     - echo 'Version '$VERSION ' was found'
     - export DOCKER_GIT_CREDENTIALS="$(cat ~/.git-credentials)"
-    - docker build --build-arg DOCKER_GIT_CREDENTIALS --build-arg ELASTIC_ADDRESS_ENV=$ELASTIC_ADDRESS_KEY -t registry.gitlab.com/jebo87/makako-gateway:$VERSION  .
+    - docker build --build-arg DOCKER_GIT_CREDENTIALS -t registry.gitlab.com/jebo87/makako-gateway:$VERSION  .
     - docker push registry.gitlab.com/jebo87/makako-gateway:$VERSION
     - docker tag registry.gitlab.com/jebo87/makako-gateway:$VERSION registry.gitlab.com/jebo87/makako-gateway:latest
     - docker push registry.gitlab.com/jebo87/makako-gateway:latest

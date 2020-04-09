@@ -8,7 +8,6 @@ FROM golang:alpine AS builder
 #http://smartystreets.com/blog/2018/09/private-dependencies-in-docker-and-go
 #then docker build --build-arg DOCKER_GIT_CREDENTIALS -t makako-gateway .
 ARG DOCKER_GIT_CREDENTIALS
-ARG ELASTIC_ADDRESS_ENV
 
 # Install git.
 # Git is required for fetching the dependencies.
