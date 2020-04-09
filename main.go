@@ -106,7 +106,7 @@ func startServer(router *mux.Router) {
 }
 
 func loadElastic() {
-	log.Println("connecting to ElasticSearch...")
+	log.Printf("connecting to ElasticSearch in %v:%v", os.Getenv("ELASTIC_ADDRESS"), os.Getenv("ELASTIC_PORT"))
 	cfg := elasticsearch.Config{
 		Addresses: []string{
 			fmt.Sprintf("http://%v:%v", os.Getenv("ELASTIC_ADDRESS"), os.Getenv("ELASTIC_PORT")),
