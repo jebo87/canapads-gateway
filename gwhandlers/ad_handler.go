@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 
 	"gitlab.com/jebo87/makako-gateway/structs"
 	"gitlab.com/jebo87/makako-grpc/ads"
@@ -17,7 +18,7 @@ func AdHandler(res http.ResponseWriter, req *http.Request) {
 
 		res.Header().Add("Access-Control-Allow-Methods", "GET")
 		//res.Header().Add("Access-Control-Allow-Headers", "Authorization")
-		res.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
+		res.Header().Add("Access-Control-Allow-Origin", os.Getenv("ALLOWED_DOMAIN"))
 		res.WriteHeader(http.StatusOK)
 
 		return

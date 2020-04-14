@@ -4,7 +4,7 @@
 ############################
 FROM golang:alpine AS builder
 
-
+ENV GO111MODULE=on
 #http://smartystreets.com/blog/2018/09/private-dependencies-in-docker-and-go
 #then docker build --build-arg DOCKER_GIT_CREDENTIALS -t makako-gateway .
 ARG DOCKER_GIT_CREDENTIALS
@@ -20,7 +20,8 @@ COPY . .
 
 # Fetch dependencies.
 # Using go get.
-RUN go get -d -v 
+#RUN go get -d -v 
+RUN go mod download
 # Build the binary.
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /makako-gateway/bin/makako-gateway
 

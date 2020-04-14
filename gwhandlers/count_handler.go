@@ -16,7 +16,7 @@ func AdsCountHandler(w http.ResponseWriter, req *http.Request) {
 		log.Println("Options request")
 
 		w.Header().Add("Access-Control-Allow-Methods", "GET")
-		w.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
+		w.Header().Add("Access-Control-Allow-Origin", "https://kamisama.canapads.ca")
 		w.WriteHeader(http.StatusOK)
 
 		return
