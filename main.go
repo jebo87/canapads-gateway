@@ -67,7 +67,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "could not connect to backend: %v\n", err)
 		os.Exit(1)
 	}
-	log.Println("connected to GRPC server")
+	//TODO: add a function to call on the gRPC server to make sure it is working.
 
 	<-c
 

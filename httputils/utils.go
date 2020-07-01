@@ -21,6 +21,11 @@ func GetIP(r *http.Request) string {
 	return r.RemoteAddr
 }
 
+//LogDivider prints a divider in the console
+func LogDivider() {
+	log.Printf("------------------------------")
+}
+
 //MalformedRequest struct that allow to handle the problems when reading decoding the Filters json info
 type MalformedRequest struct {
 	Status int
@@ -31,8 +36,17 @@ func (mr *MalformedRequest) Error() string {
 	return mr.Msg
 }
 
-//DecodeJSONBody decodes a Json request and returns an error if needed
-func DecodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}, origin string) error {
+func JSONPrettyPrint(in string) string {
+	var out bytes.Buffer
+	err := json.Indent(&out, []byte(in), "", "\t")
+	if err != nil {
+		return in
+	}
+	return out.String()
+}
+
+//DecodeJSONFromRequest decodes a Json request and returns an error if needed
+func DecodeJSONFromRequest(w http.ResponseWriter, r *http.Request, dst interface{}, origin string) error {
 	if r.Header.Get("Content-Type") != "application/json" {
 		msg := fmt.Sprintf(`{"message":[%v] Incorrect Content-Type}`, origin)
 		log.Println(msg)
@@ -44,8 +58,8 @@ func DecodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}, ori
 	if errr != nil {
 		panic(errr)
 	}
-	log.Printf("[%v] Search request received: %v", origin, string(body))
-
+	log.Printf("[%v] Search request received:", origin)
+	log.Println("\n", JSONPrettyPrint(string(body)))
 	//create a new body with the same information and continue processing the request
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
