@@ -19,9 +19,14 @@ type Exception struct {
 	Message string `json:"message"`
 }
 
-//AdJson struct
-type AdJson struct {
+//ListingsCount struct
+type ListingsCount struct {
 	Count int `json:"count"`
+}
+
+//ListingsCount struct
+type ListingID struct {
+	ListingID int `json:"listingID"`
 }
 
 //ValidationResponse struct for the token validation

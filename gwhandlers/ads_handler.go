@@ -12,6 +12,7 @@ import (
 	"gitlab.com/jebo87/makako-gateway/httputils"
 	"gitlab.com/jebo87/makako-gateway/structs"
 	"gitlab.com/jebo87/makako-grpc/ads"
+	"google.golang.org/grpc/metadata"
 )
 
 var originAll string
@@ -72,7 +73,10 @@ func ListingHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func list(ctx context.Context, client ads.AdsClient, filter ads.Filter) ([]byte, error) {
-	// ads, err := client.List(ctx, &ads.Void{})
+
+	ctx = metadata.AppendToOutgoingContext(
+		ctx,
+		"remote-addr", originAll)
 	ads, err := client.List(ctx, &filter)
 	if err != nil {
 		return nil, fmt.Errorf("[%v]could not fetch listings: %v", originAll, err)

@@ -23,7 +23,7 @@ import (
 var deployedFlag *bool
 var conf structs.Config
 var conn *grpc.ClientConn
-var clientGRPC ads.AdsClient
+
 var netClient = &http.Client{
 	Timeout: time.Second * 10,
 }
@@ -60,8 +60,8 @@ func main() {
 	}
 
 	defer conn.Close()
-	clientGRPC = ads.NewAdsClient(conn)
-	structs.ClientGRPC = clientGRPC
+
+	structs.ClientGRPC = ads.NewAdsClient(conn)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not connect to backend: %v\n", err)
@@ -86,11 +86,13 @@ func loadHandlers() {
 	// router.HandleFunc("/ads", (gwhandlers.AdsHandler)).Methods("GET", "OPTIONS")
 	router.HandleFunc("/ads", (gwhandlers.ListingHandler)).Methods("GET", "POST", "OPTIONS")
 	router.HandleFunc("/ads/{key}", gwhandlers.AdHandler).Methods("GET", "OPTIONS")
+	router.HandleFunc("/listing/new", httputils.ValidateMiddleware(gwhandlers.NewListingHandler)).Methods("POST", "OPTIONS")
 	router.HandleFunc("/ad_count", httputils.ValidateMiddleware(gwhandlers.AdsCountHandler)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/{userId}/listings", httputils.ValidateMiddleware(gwhandlers.UserListingsHandler)).Methods("POST", "OPTIONS")
 }
 
 func startServer(router *mux.Router) {
-	methodsOk := handlers.AllowedMethods([]string{"GET", "OPTIONS"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
 	//allowedHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Bearer", "Bearer ", "content-type", "Origin", "Accept"})
 	originsOK := handlers.AllowedOrigins([]string{"https://www.canapads.ca", "http://192.168.2.201:30030"})
 	optionsOk := handlers.IgnoreOptions()

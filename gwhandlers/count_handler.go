@@ -31,7 +31,7 @@ func AdsCountHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(structs.AdJson{Count: adCount})
+	json.NewEncoder(w).Encode(structs.ListingsCount{Count: adCount})
 }
 
 func count(ctx context.Context, client ads.AdsClient) (int, error) {
