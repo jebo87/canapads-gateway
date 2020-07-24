@@ -1,0 +1,11 @@
+#####################################
+# THIS IS USED TO BUILD OUR DEV IMAGE
+#####################################
+FROM alpine:3.7
+# Copy our static executable.
+COPY ./makako-gateway /makako-gateway/bin/makako-gateway
+
+ENV ELASTIC_ADDRESS = $ELASTIC_ADDRESS_ENV
+# Run the binary.
+ENTRYPOINT ["/makako-gateway/bin/makako-gateway", "-deployed=true"]
+EXPOSE 8087

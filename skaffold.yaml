@@ -1,0 +1,16 @@
+apiVersion: skaffold/v2beta5
+kind: Config
+metadata:
+  name: makako-gateway
+build:
+  tagPolicy:
+    envTemplate:
+      template: "{{.IMAGE_NAME}}:{{.IMAGE_VERSION}}" #THESE NEED TO BE SET BEFORE EXECUTING skaffold dev
+  artifacts:
+    - image: registry.gitlab.com/jebo87/makako-gateway
+      custom:
+        buildCommand: ./k8s/build-skaffold.sh
+deploy:
+  kubectl:
+    manifests:
+      - k8s/gateway-workloads.yaml
