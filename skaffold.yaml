@@ -5,7 +5,7 @@ metadata:
 build:
   tagPolicy:
     envTemplate:
-      template: "{{.IMAGE_NAME}}:{{.IMAGE_VERSION}}" #THESE NEED TO BE SET BEFORE EXECUTING skaffold dev
+      template: "registry.gitlab.com/jebo87/makako-gateway:test" #THESE NEED TO BE SET BEFORE EXECUTING skaffold dev
   artifacts:
     - image: registry.gitlab.com/jebo87/makako-gateway
       custom:
