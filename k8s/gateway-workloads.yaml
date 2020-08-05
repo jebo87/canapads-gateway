@@ -37,8 +37,7 @@ spec:
     app: makako-gateway
 
   ports:
-    #- name: http
-    - port: 8087
-      nodePort: 30008
+    - name: http
+      port: 8087
 
-  type: NodePort
+  type: ClusterIP
