@@ -18,7 +18,14 @@ import (
 	"gitlab.com/jebo87/makako-gateway/structs"
 	"gitlab.com/jebo87/makako-grpc/ads"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
+
+//Environment variables to set:
+// os.Getenv("API_ADDRESS_PROD"), os.Getenv("API_PORT_PROD")
+// os.Getenv("API_ADDRESS_DEV"), os.Getenv("API_PORT_DEV")
+// os.Getenv("PORT")
+// os.Getenv("ELASTIC_ADDRESS"), os.Getenv("ELASTIC_PORT"))
 
 var deployedFlag *bool
 var conf structs.Config
@@ -30,11 +37,12 @@ var netClient = &http.Client{
 var router *mux.Router
 var es elasticsearch.Client
 
-//Environment variables to set:
-// os.Getenv("API_ADDRESS_PROD"), os.Getenv("API_PORT_PROD")
-// os.Getenv("API_ADDRESS_DEV"), os.Getenv("API_PORT_DEV")
-// os.Getenv("PORT")
-// os.Getenv("ELASTIC_ADDRESS"), os.Getenv("ELASTIC_PORT"))
+var kacp = keepalive.ClientParameters{
+	Time:                10 * time.Second, // send pings every 10 seconds if there is no activity
+	Timeout:             time.Second,      // wait 1 second for ping ack before considering the connection dead
+	PermitWithoutStream: true,             // send pings even without active streams
+}
+
 func main() {
 	log.Println("Launching makako-gateway...")
 	log.Println("Developed by Makako Labs http://www.makakolabs.ca")
@@ -49,11 +57,11 @@ func main() {
 	//call gRPC server
 	var err error
 	if *deployedFlag {
-		conn, err = grpc.Dial(os.Getenv("API_ADDRESS_PROD")+":"+os.Getenv("API_PORT_PROD"), grpc.WithInsecure())
+		conn, err = grpc.Dial(os.Getenv("API_ADDRESS_PROD")+":"+os.Getenv("API_PORT_PROD"), grpc.WithInsecure(), grpc.WithKeepaliveParams(kacp))
 		log.Printf("connecting to GRPC server in %v:%v ", os.Getenv("API_ADDRESS_PROD"), os.Getenv("API_PORT_PROD"))
 
 	} else {
-		conn, err = grpc.Dial(os.Getenv("API_ADDRESS_DEV")+":"+os.Getenv("API_PORT_DEV"), grpc.WithInsecure())
+		conn, err = grpc.Dial(os.Getenv("API_ADDRESS_DEV")+":"+os.Getenv("API_PORT_DEV"), grpc.WithInsecure(), grpc.WithKeepaliveParams(kacp))
 
 		log.Println("connecting to GRPC server " + os.Getenv("API_ADDRESS_DEV"))
 
@@ -103,7 +111,7 @@ func startServer(router *mux.Router) {
 		log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
 	} else {
 		log.Println("Server started in dev mode @ http://localhost" + ":" + os.Getenv("PORT") + ". Press CTRL+C to exit application")
-		log.Fatal(http.ListenAndServe("localhost:"+os.Getenv("PORT"), handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
+		log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), handlers.CORS(optionsOk, methodsOk, originsOK)(router)))
 	}
 }
 
