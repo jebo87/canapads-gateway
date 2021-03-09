@@ -34,14 +34,14 @@ func GetListings(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&filter); err != nil {
 		restError := errors.NewBadRequestError("invalid json body for filter")
-		c.JSON(restError.Status, restError)
+		c.AbortWithStatusJSON(restError.Status, restError)
 	}
 	// a, _ := json.Marshal(filter)
 	// log.Println(utils.JSONPrettyPrint(string(a)))
 	result, err := listings.ListingsService.GetListings(c, filter)
 
 	if err != nil {
-		c.JSON(err.Status, err)
+		c.AbortWithStatusJSON(err.Status, err)
 		return
 	}
 	c.JSON(http.StatusOK, result)
