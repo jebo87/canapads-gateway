@@ -1,18 +1,15 @@
-package gwhandlers
+package listings
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"log"
 	"net/http"
-	"os"
 
-	"gitlab.com/jebo87/makako-gateway/httputils"
-	"gitlab.com/jebo87/makako-gateway/structs"
+	"github.com/gin-gonic/gin"
+	"gitlab.com/jebo87/makako-gateway/controllers"
+	"gitlab.com/jebo87/makako-gateway/services/listings"
+	"gitlab.com/jebo87/makako-gateway/utils"
+	"gitlab.com/jebo87/makako-gateway/utils/errors"
 	"gitlab.com/jebo87/makako-grpc/ads"
-	"google.golang.org/grpc/metadata"
 )
 
 var originAll string
@@ -22,67 +19,38 @@ var originAll string
 //     &rent_by_owner=true&country=canada&property_type=apartment&province=qc
 //     &neighborhood=la%20salle&price_low=0&price_high=2000&search_param=metallica
 
-//ListingHandler handler for searches
-func ListingHandler(w http.ResponseWriter, req *http.Request) {
-	httputils.LogDivider()
-	originAll = httputils.GetIP(req)
-	if req.Method == "OPTIONS" {
-		log.Printf("[%v] Options request", originAll)
-		w.Header().Add("Access-Control-Allow-Methods", "GET,POST")
-		w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
-		//w.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
-		w.Header().Add("Access-Control-Allow-Origin", os.Getenv("ALLOWED_DOMAIN"))
-		w.WriteHeader(http.StatusOK)
+//GetListings handler for searches
+func GetListings(c *gin.Context) {
+	var filter ads.Filter
+	utils.LogDivider()
 
+	if controllers.IsPreflight(c) {
 		return
 	}
-
 	//set maximum size for the request
-	req.Body = http.MaxBytesReader(w, req.Body, 524288)
-
-	var filter ads.Filter
+	controllers.SetMaxRqSize(c, 524288)
 
 	log.Printf("[%v] Client connected", originAll)
 
-	err := httputils.DecodeJSONFromRequest(w, req, &filter, originAll)
-	if err != nil {
-		var mr *httputils.MalformedRequest
-		if errors.As(err, &mr) {
-			http.Error(w, mr.Msg, mr.Status)
-		} else {
-			log.Printf("[%v] %v", originAll, err.Error())
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		}
+	if err := c.ShouldBindJSON(&filter); err != nil {
+		restError := errors.NewBadRequestError("invalid json body for filter")
+		c.JSON(restError.Status, restError)
+	}
+	// a, _ := json.Marshal(filter)
+	// log.Println(utils.JSONPrettyPrint(string(a)))
+	result, err := listings.ListingsService.GetListings(c, filter)
 
+	if err != nil {
+		c.JSON(err.Status, err)
 		return
 	}
-
-	listings, err := list(context.Background(), structs.ClientGRPC, filter)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "{}", http.StatusBadRequest)
-
-	} else {
-
-		log.Printf("[%v] Success! - Returning listings to remote client", originAll)
-		log.Printf("[%v] finished", originAll)
-		httputils.LogDivider()
-		w.Write(listings)
-	}
+	c.JSON(http.StatusOK, result)
 
 }
 
-func list(ctx context.Context, client ads.AdsClient, filter ads.Filter) ([]byte, error) {
-
-	ctx = metadata.AppendToOutgoingContext(
-		ctx,
-		"remote-addr", originAll)
-	ads, err := client.List(ctx, &filter)
-	if err != nil {
-		return nil, fmt.Errorf("[%v]could not fetch listings: %v", originAll, err)
-	}
-	marshalled, err := json.Marshal(ads)
-	//log.Println(strconv.Itoa(int(ads.GetList().Ads)))
-	return marshalled, err
-
+func logSuccess(result *ads.AdList) {
+	log.Printf("[%v] Success! - Returning listings to remote client", originAll)
+	log.Printf("[%v] finished", originAll)
+	utils.LogDivider()
+	log.Println(result)
 }

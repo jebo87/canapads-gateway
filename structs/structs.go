@@ -44,5 +44,5 @@ type ValidationResponse struct {
 	Scope    string `json:"scope"`
 }
 
-//ClientGRPC reusable client for GRPC connections
-var ClientGRPC ads.AdsClient
+//GrpcClient reusable client for GRPC connections
+var GrpcClient ads.AdsClient
