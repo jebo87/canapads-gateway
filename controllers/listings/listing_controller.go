@@ -1,4 +1,4 @@
-package gwhandlers
+package listings
 
 import (
 	"context"
@@ -6,42 +6,41 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
-	"gitlab.com/jebo87/makako-gateway/httputils"
-	"gitlab.com/jebo87/makako-gateway/structs"
+	"github.com/gin-gonic/gin"
+	"gitlab.com/jebo87/makako-gateway/services/listings"
+	"gitlab.com/jebo87/makako-gateway/utils/errors"
+	"gitlab.com/jebo87/makako-gateway/utils/utils_http"
 	"gitlab.com/jebo87/makako-grpc/ads"
 )
 
 var origin string
 
 //AdHandler handler for a single listing
-func AdHandler(res http.ResponseWriter, req *http.Request) {
-	if req.Method == "OPTIONS" {
-		log.Println("Options request")
-		res.Header().Add("Access-Control-Allow-Methods", "GET")
-		//res.Header().Add("Access-Control-Allow-Headers", "Authorization")
-		res.Header().Add("Access-Control-Allow-Origin", os.Getenv("ALLOWED_DOMAIN"))
-		res.WriteHeader(http.StatusOK)
-
+func GetSingleListing(c *gin.Context) {
+	if utils_http.IsPreflight(c) {
+		c.String(http.StatusOK, "OK")
 		return
 	}
-	requestedAd := req.URL.Path[5:]
+	requestedAd, found := c.Params.Get("id")
 
-	origin = httputils.GetIP(req)
+	if !found {
+		restErr := errors.NewBadRequestError("id for listing required")
+		c.AbortWithStatusJSON(restErr.Status, restErr)
+		return
+	}
+
+	origin = utils_http.GetIP(c.Request)
 	log.Println(fmt.Sprintf("[%v] requesting ad %v", origin, requestedAd))
 
-	ad, err := adDetail(context.Background(), structs.ClientGRPC, requestedAd)
-	//in case we need to see the ad returned, uncomment the three following lines
-	var dat ads.Ad
-	json.Unmarshal(ad, &dat)
-	//log.Println(dat)
+	ad, err := listings.ListingsService.GetSingleListing(c, requestedAd)
 	if err != nil {
 		log.Println(err)
-
-		http.Error(res, "{}", http.StatusNotFound)
+		restErr := errors.NewServerError("Internal server error")
+		c.AbortWithStatusJSON(restErr.Status, restErr)
+		return
 	} else {
-		res.Write(ad)
+		c.JSON(http.StatusOK, ad)
 	}
 }
 
