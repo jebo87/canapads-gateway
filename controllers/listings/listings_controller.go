@@ -1,14 +1,14 @@
 package listings
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gitlab.com/jebo87/makako-gateway/controllers"
 	"gitlab.com/jebo87/makako-gateway/services/listings"
-	"gitlab.com/jebo87/makako-gateway/utils"
 	"gitlab.com/jebo87/makako-gateway/utils/errors"
+	"gitlab.com/jebo87/makako-gateway/utils/utils_http"
 	"gitlab.com/jebo87/makako-grpc/ads"
 )
 
@@ -21,23 +21,27 @@ var originAll string
 
 //GetListings handler for searches
 func GetListings(c *gin.Context) {
-	var filter ads.Filter
-	utils.LogDivider()
+	var filter = &ads.Filter{}
+	utils_http.LogDivider()
 
-	if controllers.IsPreflight(c) {
+	if utils_http.IsPreflight(c) {
 		return
 	}
 	//set maximum size for the request
-	controllers.SetMaxRqSize(c, 524288)
+	utils_http.SetMaxRqSize(c, 524288)
 
 	log.Printf("[%v] Client connected", originAll)
 
-	if err := c.ShouldBindJSON(&filter); err != nil {
+	if err := c.ShouldBindJSON(filter); err != nil {
+		log.Println(err)
 		restError := errors.NewBadRequestError("invalid json body for filter")
 		c.AbortWithStatusJSON(restError.Status, restError)
+		return
 	}
-	// a, _ := json.Marshal(filter)
-	// log.Println(utils.JSONPrettyPrint(string(a)))
+
+	a, _ := json.Marshal(filter)
+	log.Println("listings_controller - Filter: ", utils_http.JSONPrettyPrint(string(a)))
+
 	result, err := listings.ListingsService.GetListings(c, filter)
 
 	if err != nil {
@@ -51,6 +55,6 @@ func GetListings(c *gin.Context) {
 func logSuccess(result *ads.AdList) {
 	log.Printf("[%v] Success! - Returning listings to remote client", originAll)
 	log.Printf("[%v] finished", originAll)
-	utils.LogDivider()
+	utils_http.LogDivider()
 	log.Println(result)
 }

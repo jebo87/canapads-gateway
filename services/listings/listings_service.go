@@ -1,19 +1,20 @@
 package listings
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 
 	"github.com/gin-gonic/gin"
 	"gitlab.com/jebo87/makako-gateway/structs"
-	"gitlab.com/jebo87/makako-gateway/utils"
 	"gitlab.com/jebo87/makako-gateway/utils/errors"
+	"gitlab.com/jebo87/makako-gateway/utils/utils_http"
 	"gitlab.com/jebo87/makako-grpc/ads"
-	"google.golang.org/grpc/metadata"
 )
 
 type listingsServiceInterface interface {
-	GetListings(c *gin.Context, filter ads.Filter) (*ads.AdList, *errors.RestErr)
+	GetListings(c *gin.Context, filter *ads.Filter) (*ads.AdList, *errors.RestErr)
+	GetSingleListing(c *gin.Context, requestedID string) (*ads.Ad, *errors.RestErr)
 }
 
 type listingsService struct {
@@ -27,13 +28,13 @@ func init() {
 	ListingsService = &listingsService{}
 }
 
-func (s *listingsService) GetListings(c *gin.Context, filter ads.Filter) (*ads.AdList, *errors.RestErr) {
+func (s *listingsService) GetListings(c *gin.Context, filter *ads.Filter) (*ads.AdList, *errors.RestErr) {
 
-	metadata.AppendToOutgoingContext(c, "remote-addr", utils.GetIP(c.Request))
+	utils_http.AppendIPSourceToRequest(c)
 
-	searchResponse, err := structs.GrpcClient.List(c, &filter)
+	searchResponse, err := structs.GrpcClient.List(c, filter)
 	if err != nil {
-		log.Println("Error getting the listings from grpc server", err)
+		log.Println("Invalid response from grpc server", err)
 		restError := errors.NewServerError("invalid response from server")
 		return nil, restError
 	}
@@ -45,4 +46,14 @@ func (s *listingsService) GetListings(c *gin.Context, filter ads.Filter) (*ads.A
 		return nil, restError
 	}
 	return result, nil
+}
+
+func (s *listingsService) GetSingleListing(c *gin.Context, requestedID string) (*ads.Ad, *errors.RestErr) {
+	searchResponse, err := structs.GrpcClient.AdDetail(context.Background(), &ads.Text{Text: requestedID})
+	if err != nil {
+		log.Println("Invalid response from grpc server", err)
+		restError := errors.NewServerError("invalid response from server")
+		return nil, restError
+	}
+	return searchResponse, nil
 }
