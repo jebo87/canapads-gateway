@@ -1,4 +1,4 @@
-package httputils
+package utils_http
 
 import (
 	"testing"

@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gitlab.com/jebo87/makako-gateway/controllers"
 	"gitlab.com/jebo87/makako-gateway/structs"
 	"gitlab.com/jebo87/makako-gateway/utils/errors"
+	"gitlab.com/jebo87/makako-gateway/utils/utils_http"
 )
 
 var netClient = &http.Client{
@@ -25,7 +25,7 @@ func ValidateMiddleware() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		//enableCors(&w)
-		if controllers.IsPreflight(c) {
+		if utils_http.IsPreflight(c) {
 			return
 		}
 		authorizationHeader := c.GetHeader("Authorization")
