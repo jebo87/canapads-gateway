@@ -13,5 +13,9 @@ import (
 // 	router.HandleFunc("/{userId}/listings", httputils.ValidateMiddleware(gwhandlers.UserListingsHandler)).Methods("POST", "OPTIONS")
 
 func MapURLs() {
-	router.GET("/listings" /*middleware.ValidateMiddleware(),*/, listings.GetListings)
+	v1 := router.Group("/api/v1")
+	{
+		v1.POST("/listings" /*middleware.ValidateMiddleware(),*/, listings.GetListings)
+		v1.GET("/listings/:id" /*middleware.ValidateMiddleware(),*/, listings.GetSingleListing)
+	}
 }
