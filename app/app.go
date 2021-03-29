@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"gitlab.com/jebo87/makako-gateway/structs"
+	"gitlab.com/jebo87/makako-gateway/clients"
 	"gitlab.com/jebo87/makako-grpc/ads"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
@@ -26,7 +26,7 @@ func StartApp() {
 	grpcConnection := connectGRPC()
 
 	defer grpcConnection.Close()
-	structs.GrpcClient = ads.NewAdsClient(grpcConnection)
+	clients.GrpcClient = ads.NewAdsClient(grpcConnection)
 	router.Run("localhost:8080")
 }
 

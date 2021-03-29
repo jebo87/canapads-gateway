@@ -1,7 +1,5 @@
 package structs
 
-import "gitlab.com/jebo87/makako-grpc/ads"
-
 //Config struct
 type Config struct {
 	Gateway struct {
@@ -43,6 +41,3 @@ type ValidationResponse struct {
 	Active   bool   `json:"active"`
 	Scope    string `json:"scope"`
 }
-
-//GrpcClient reusable client for GRPC connections
-var GrpcClient ads.AdsClient

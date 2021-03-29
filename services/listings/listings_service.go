@@ -5,16 +5,14 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/gin-gonic/gin"
-	"gitlab.com/jebo87/makako-gateway/structs"
+	"gitlab.com/jebo87/makako-gateway/clients"
 	"gitlab.com/jebo87/makako-gateway/utils/errors"
-	"gitlab.com/jebo87/makako-gateway/utils/utils_http"
 	"gitlab.com/jebo87/makako-grpc/ads"
 )
 
 type listingsServiceInterface interface {
-	GetListings(c *gin.Context, filter *ads.Filter) (*ads.AdList, *errors.RestErr)
-	GetSingleListing(c *gin.Context, requestedID string) (*ads.Ad, *errors.RestErr)
+	GetListings(c context.Context, filter *ads.Filter) (*ads.AdList, *errors.RestErr)
+	GetSingleListing(c context.Context, requestedID string) (*ads.Ad, *errors.RestErr)
 }
 
 type listingsService struct {
@@ -28,11 +26,11 @@ func init() {
 	ListingsService = &listingsService{}
 }
 
-func (s *listingsService) GetListings(c *gin.Context, filter *ads.Filter) (*ads.AdList, *errors.RestErr) {
+func (s *listingsService) GetListings(c context.Context, filter *ads.Filter) (*ads.AdList, *errors.RestErr) {
 
-	utils_http.AppendIPSourceToRequest(c)
+	//utils_http.AppendIPSourceToRequest(c)
 
-	searchResponse, err := structs.GrpcClient.List(c, filter)
+	searchResponse, err := clients.GrpcClient.List(c, filter)
 	if err != nil {
 		log.Println("Invalid response from grpc server", err)
 		restError := errors.NewServerError("invalid response from server")
@@ -48,11 +46,11 @@ func (s *listingsService) GetListings(c *gin.Context, filter *ads.Filter) (*ads.
 	return result, nil
 }
 
-func (s *listingsService) GetSingleListing(c *gin.Context, requestedID string) (*ads.Ad, *errors.RestErr) {
-	searchResponse, err := structs.GrpcClient.AdDetail(context.Background(), &ads.Text{Text: requestedID})
+func (s *listingsService) GetSingleListing(c context.Context, requestedID string) (*ads.Ad, *errors.RestErr) {
+	searchResponse, err := clients.GrpcClient.AdDetail(c, &ads.Text{Text: requestedID})
 	if err != nil {
-		log.Println("Invalid response from grpc server", err)
-		restError := errors.NewServerError("invalid response from server")
+		message := err.Error()
+		restError := errors.NewServerError(message)
 		return nil, restError
 	}
 	return searchResponse, nil
