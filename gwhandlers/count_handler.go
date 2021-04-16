@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"gitlab.com/jebo87/makako-gateway/clients"
 	"gitlab.com/jebo87/makako-gateway/structs"
 	"gitlab.com/jebo87/makako-grpc/ads"
 )
@@ -14,7 +15,6 @@ import (
 func AdsCountHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "OPTIONS" {
 		log.Println("Options request")
-
 		w.Header().Add("Access-Control-Allow-Methods", "GET")
 		w.Header().Add("Access-Control-Allow-Origin", "https://kamisama.canapads.ca")
 		w.WriteHeader(http.StatusOK)
@@ -22,7 +22,7 @@ func AdsCountHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	log.Println("getting ad count from server")
-	adCount, err := count(context.Background(), structs.ClientGRPC)
+	adCount, err := count(context.Background(), clients.GrpcClient)
 
 	if err != nil {
 		log.Println(err)

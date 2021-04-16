@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gitlab.com/jebo87/makako-gateway/services/listings"
@@ -33,7 +34,16 @@ func GetSingleListing(c *gin.Context) {
 	origin = utils_http.GetIP(c.Request)
 	log.Println(fmt.Sprintf("[%v] requesting ad %v", origin, requestedAd))
 
-	ad, err := listings.ListingsService.GetSingleListing(c, requestedAd)
+	listingID, err := GetListingID(requestedAd)
+
+	if err != nil {
+		log.Println(err)
+		restErr := errors.NewBadRequestError("Bad Request")
+		c.AbortWithStatusJSON(restErr.Status, restErr)
+		return
+	}
+
+	ad, err := listings.ListingsService.GetSingleListing(c, listingID)
 	if err != nil {
 		log.Println(err)
 		restErr := errors.NewServerError("Internal server error")
@@ -52,4 +62,13 @@ func adDetail(ctx context.Context, client ads.AdsClient, adID string) ([]byte, e
 	adFormatted, _ := json.Marshal(ad)
 	return adFormatted, err
 
+}
+
+func GetListingID(id string) (int64, *errors.RestErr) {
+	listingID, userErr := strconv.ParseInt(id, 10, 64)
+	if userErr != nil {
+		return 0, errors.NewBadRequestError("invalid listing ID")
+	}
+
+	return listingID, nil
 }

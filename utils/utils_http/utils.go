@@ -2,6 +2,7 @@ package utils_http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"google.golang.org/grpc/metadata"
 )
 
 //GetIP gets the remote IP from a request
@@ -144,6 +144,6 @@ func SetMaxRqSize(c *gin.Context, size int64) {
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, size)
 }
 
-func AppendIPSourceToRequest(c *gin.Context) {
-	metadata.AppendToOutgoingContext(c, "remote-addr", GetIP(c.Request))
+func AppendIPSourceToRequest(c context.Context) {
+	//metadata.AppendToOutgoingContext(c, "remote-addr", GetIP(c.))
 }
