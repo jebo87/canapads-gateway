@@ -1,4 +1,4 @@
-package httputils
+package middleware
 
 import (
 	"encoding/json"
@@ -10,7 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"gitlab.com/jebo87/makako-gateway/structs"
+	"gitlab.com/jebo87/makako-gateway/utils/errors"
+	"gitlab.com/jebo87/makako-gateway/utils/utils_http"
 )
 
 var netClient = &http.Client{
@@ -18,21 +21,14 @@ var netClient = &http.Client{
 }
 
 //ValidateMiddleware This is the middleware used to protect certain api calls
-func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func ValidateMiddleware() gin.HandlerFunc {
 
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	return func(c *gin.Context) {
 		//enableCors(&w)
-		if req.Method == "OPTIONS" {
-			log.Println("Options request")
-
-			w.Header().Add("Access-Control-Allow-Methods", "GET")
-			w.Header().Add("Access-Control-Allow-Headers", "Authorization")
-			w.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
-			w.WriteHeader(http.StatusOK)
-
+		if utils_http.IsPreflight(c) {
 			return
 		}
-		authorizationHeader := req.Header.Get("Authorization")
+		authorizationHeader := c.GetHeader("Authorization")
 		if authorizationHeader != "" {
 			bearerToken := strings.Split(authorizationHeader, " ")
 			if len(bearerToken) == 2 {
@@ -40,22 +36,23 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 					log.Println(bearerToken)
 					if validateToken(bearerToken[1]) {
 						//everything is ok, proceed with allow the exectution of the next function
-						next(w, req)
+						c.Next()
 					} else {
-						// json.NewEncoder(w).Encode(structs.Exception{Message: "Token invalid or expired"})
-						http.Error(w, `{Message: "Token invalid or expired"}`, http.StatusUnauthorized)
-
+						respErr := errors.NewUnauthorizedError("Missing / expired auth token")
+						c.AbortWithStatusJSON(respErr.Status, respErr)
 					}
 				} else {
-					http.Error(w, `{Message: "Invalid authorization token"}`, http.StatusUnauthorized)
-
+					respErr := errors.NewUnauthorizedError("Invalid authorization token")
+					c.AbortWithStatusJSON(respErr.Status, respErr)
 				}
 			}
 		} else {
-			http.Error(w, `{Message: "Authorization required"}`, http.StatusUnauthorized)
+			respErr := errors.NewUnauthorizedError("Authorization required")
+			c.AbortWithStatusJSON(respErr.Status, respErr)
 		}
-	})
+	}
 }
+
 func validateToken(token string) bool {
 	form := url.Values{}
 	form.Add("token", token)
@@ -63,9 +60,7 @@ func validateToken(token string) bool {
 	req, erro := http.NewRequest("POST", "http://localhost:4445/oauth2/introspect", strings.NewReader(form.Encode()))
 	if erro != nil {
 		log.Println(erro.Error())
-
 		return false
-
 	}
 	log.Println("adding headers")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")

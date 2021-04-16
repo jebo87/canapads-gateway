@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"gitlab.com/jebo87/makako-gateway/structs"
+	"gitlab.com/jebo87/makako-gateway/clients"
 	"gitlab.com/jebo87/makako-grpc/ads"
 )
 
@@ -19,7 +19,7 @@ type responseUL struct {
 //UserListingsHandler handler used to return listings for a particular user
 func UserListingsHandler(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "OPTIONS" {
-		log.Printf("[%v] Options request", originAll)
+		//log.Printf("[%v] Options request", originAll)
 		w.Header().Add("Access-Control-Allow-Methods", "GET,POST")
 		w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
 		//w.Header().Add("Access-Control-Allow-Origin", "https://www.canapads.ca")
@@ -39,7 +39,7 @@ func UserListingsHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Println(string(userid))
-	userListings, err := getUserListings(context.Background(), structs.ClientGRPC, &ads.UserID{UserID: string(userid)})
+	userListings, err := getUserListings(context.Background(), clients.GrpcClient, &ads.UserID{UserID: string(userid)})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}

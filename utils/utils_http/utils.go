@@ -1,7 +1,8 @@
-package httputils
+package utils_http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,7 +10,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 //GetIP gets the remote IP from a request
@@ -119,4 +123,27 @@ func DecodeJSONFromRequest(w http.ResponseWriter, r *http.Request, dst interface
 	log.Printf("[%v] Request body parsed correctly", origin)
 
 	return nil
+}
+
+func IsPreflight(c *gin.Context) bool {
+	if c.Request.Method == "OPTIONS" {
+		//log.Printf("[%v] Options request", originAll)
+		c.Header("Access-Control-Allow-Methods", "GET,POST")
+		c.Header("Access-Control-Allow-Headers", "Content-Type")
+		c.Header("Access-Control-Allow-Origin", os.Getenv("ALLOWED_DOMAIN"))
+		c.Status(http.StatusOK)
+
+		return true
+	}
+
+	return false
+
+}
+
+func SetMaxRqSize(c *gin.Context, size int64) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, size)
+}
+
+func AppendIPSourceToRequest(c context.Context) {
+	//metadata.AppendToOutgoingContext(c, "remote-addr", GetIP(c.))
 }
