@@ -19,10 +19,7 @@ var origin string
 
 //AdHandler handler for a single listing
 func GetSingleListing(c *gin.Context) {
-	if utils_http.IsPreflight(c) {
-		c.String(http.StatusOK, "OK")
-		return
-	}
+
 	requestedAd, found := c.Params.Get("id")
 
 	if !found {
