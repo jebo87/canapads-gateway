@@ -24,9 +24,10 @@ func GetListings(c *gin.Context) {
 	var filter = &ads.Filter{}
 	utils_http.LogDivider()
 
-	if utils_http.IsPreflight(c) {
-		return
-	}
+	// if utils_http.IsPreflight(c) {
+	// 	c.String(http.StatusOK, "OK")
+	// 	return
+	// }
 	//set maximum size for the request
 	utils_http.SetMaxRqSize(c, 524288)
 
