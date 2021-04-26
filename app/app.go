@@ -22,12 +22,16 @@ var (
 )
 
 func StartApp() {
-	MapURLs()
+
 	grpcConnection := connectGRPC()
 
 	defer grpcConnection.Close()
 	clients.GrpcClient = ads.NewAdsClient(grpcConnection)
-	router.Run("localhost:8080")
+
+	router.Use(CORS())
+
+	MapURLs()
+	router.Run(":8087")
 }
 
 func connectGRPC() *grpc.ClientConn {

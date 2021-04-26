@@ -11,7 +11,7 @@ import (
 )
 
 type listingsServiceInterface interface {
-	GetListings(c context.Context, filter *ads.Filter) (*ads.AdList, *errors.RestErr)
+	GetListings(c context.Context, filter *ads.Filter) (*ads.SearchResponse, *errors.RestErr)
 	GetSingleListing(c context.Context, requestedID int64) (*ads.Ad, *errors.RestErr)
 }
 
@@ -26,7 +26,7 @@ func init() {
 	ListingsService = &listingsService{}
 }
 
-func (s *listingsService) GetListings(c context.Context, filter *ads.Filter) (*ads.AdList, *errors.RestErr) {
+func (s *listingsService) GetListings(c context.Context, filter *ads.Filter) (*ads.SearchResponse, *errors.RestErr) {
 
 	//utils_http.AppendIPSourceToRequest(c)
 
