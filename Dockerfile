@@ -11,7 +11,10 @@ ARG DOCKER_GIT_CREDENTIALS
 
 # Install git.
 # Git is required for fetching the dependencies.
-RUN apk update && apk add --no-cache git
+#RUN apk update && apk add --no-cache git
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y git
 
 #set the git config
 RUN git config --global credential.helper store && echo "${DOCKER_GIT_CREDENTIALS}" > ~/.git-credentials

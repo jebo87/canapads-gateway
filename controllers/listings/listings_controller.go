@@ -40,9 +40,11 @@ func GetListings(c *gin.Context) {
 		return
 	}
 
+	//log filter to console.
 	a, _ := json.Marshal(filter)
 	log.Println("listings_controller - Filter: ", utils_http.JSONPrettyPrint(string(a)))
 
+	//call service to get listings
 	result, err := listings.ListingsService.GetListings(c, filter)
 
 	if err != nil {

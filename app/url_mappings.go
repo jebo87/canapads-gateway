@@ -2,6 +2,7 @@ package app
 
 import (
 	"gitlab.com/jebo87/makako-gateway/controllers/listings"
+	"gitlab.com/jebo87/makako-gateway/controllers/middleware"
 )
 
 // 	// router.HandleFunc("/ads", httputils.ValidateMiddleware(adsHandler)).Methods("GET", "OPTIONS")
@@ -13,6 +14,6 @@ import (
 // 	router.HandleFunc("/{userId}/listings", httputils.ValidateMiddleware(gwhandlers.UserListingsHandler)).Methods("POST", "OPTIONS")
 
 func MapURLs() {
-	router.POST("api/v1/listings", listings.GetListings)
+	router.POST("api/v1/listings", middleware.ValidateMiddleware(), listings.GetListings)
 	router.GET("api/v1/listings/:id", listings.GetSingleListing)
 }
