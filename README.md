@@ -1,5 +1,5 @@
 
-# makako-gateway
+# canapads-gateway
 This repository is part of Canapads.ca.  This is a website being created to provide access to rental properties in Canada. 
 
 ![canapads_polygon](https://github.com/jebo87/canapads-gateway/assets/7273200/8247c1a9-bd63-4d57-bada-f3c1cb98348c)
